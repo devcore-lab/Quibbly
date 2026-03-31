@@ -46,12 +46,10 @@ POSTGRES_POOL: Optional[psycopg2.pool.ThreadedConnectionPool] = None
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
-    rebuild_question_calibration()
-    if APP_ENV == "production":
-        if not APP_BASE_URL.startswith("https://"):
-            LOGGER.warning("production_check APP_BASE_URL should be https in production")
-        if PAYMENT_PROVIDER == "stripe" and not STRIPE_SECRET_KEY:
-            LOGGER.warning("production_check PAYMENT_PROVIDER=stripe but STRIPE_SECRET_KEY is missing")
+
+    import threading
+    threading.Thread(target=rebuild_question_calibration, daemon=True).start()
+
     yield
 
 
